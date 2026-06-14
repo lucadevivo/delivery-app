@@ -1,0 +1,16 @@
+# Postgres di sviluppo per il backend API (porta 5434, isolato dagli altri progetti).
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rider-pg
+    environment:
+      POSTGRES_DB: rider_db
+      POSTGRES_USER: rider
+      POSTGRES_PASSWORD: rider
+    ports:
+      - "5434:5432"
+    volumes:
+      - rider-pg-data:/var/lib/postgresql/data
+
+volumes:
+  rider-pg-data:
