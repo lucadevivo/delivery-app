@@ -1,0 +1,55 @@
+# Stack di produzione: API + Postgres. Allineato al pattern già in uso
+# (Docker compose + Cloudflare Tunnel, niente sudo).
+# Avvio:  docker compose -f docker-compose.prod.yml up -d --build
+# Migrazioni (una tantum a ogni deploy):
+#   docker compose -f docker-compose.prod.yml run --rm migrate
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - rider-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+      target: build # stage con l'intero workspace + tsx (la runner non li ha)
+    working_dir: /repo
+    profiles: ["tools"]
+    command: ["pnpm", "--filter", "@rider/db", "db:migrate"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-true}
+      SMTP_URL: ${SMTP_URL}
+      SMTP_FROM: ${SMTP_FROM}
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  rider-pg-data:

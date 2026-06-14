@@ -28,10 +28,17 @@ Servono Privacy Policy + ToS + conformità GDPR dal lancio (dati economici).
    `/api/v1/turni` (calcolo server-side col motore + snapshot), `/api/v1/dashboard`.
    Tutto isolato per utente. Verificato end-to-end con Postgres reale (signup,
    guardia 401, calcolo turni, dashboard, isolamento multi-tenant).
-4. **Multi-tenancy** — signup pubblico (rimuovere blocco middleware), verifica
-   email, reset password, export + cancellazione GDPR, audit isolamento `userId`,
-   campo `tier` + feature flag.
-5. **Hosting produzione** — Postgres gestito + backup + monitoring (Sentry).
+4. **Multi-tenancy** ✅ FATTO — signup pubblico, verifica email + reset password
+   (mailer console in dev / SMTP in prod via env), export GDPR
+   (`/api/v1/account/export`) e cancellazione account (`DELETE /api/v1/account`,
+   in transazione), `/api/v1/me` con entitlements (predisposti per il paywall),
+   `tier`/`trialEndsAt` su user. Isolamento per `userId` su tutte le route.
+   Verificato end-to-end.
+5. **Hosting produzione** ✅ FATTO (artefatti) — migrazioni versionate
+   (`drizzle/0000_init.sql` + runner `db:migrate`), Dockerfile multi-stage
+   (Next standalone), `docker-compose.prod.yml` (api+db+migrate), `/api/health`,
+   `scripts/backup.sh`, CI GitHub Actions, `docs/DEPLOY.md`. Resta da eseguire il
+   deploy reale sul server quando si vuole andare online.
 6. **App React Native (Expo)** — onboarding/wizard con template piattaforme
    (Glovo, Deliveroo, Just Eat, Uber Eats, pizzerie a contanti), schermate
    turni/dashboard/analitica, offline base, push.
@@ -44,12 +51,12 @@ Servono Privacy Policy + ToS + conformità GDPR dal lancio (dati economici).
 
 - `packages/core` completo e testato (12 test verdi).
 - `packages/db` schema Drizzle sul modello generalizzato (typecheck ok).
-- `apps/api` backend Next.js headless: auth bearer + CRUD contratti/turni +
-  dashboard, isolamento multi-tenant. Verificato end-to-end. README con avvio
-  locale (docker compose Postgres su 5434, `pnpm --filter @rider/api dev` su 4000).
+- `apps/api` backend Next.js headless: auth bearer, CRUD contratti/turni,
+  dashboard, `/me`+entitlements, export/cancellazione GDPR, `/api/health`.
+  Isolamento multi-tenant. Verificato end-to-end sulla build di produzione.
+- Produzione: migrazioni versionate, Dockerfile, compose prod, CI, backup, deploy
+  doc (`docs/DEPLOY.md`).
 - Repo GitHub: `git@github.com:lucadevivo/delivery-app.git` (branch `main`).
 - **Prossimo: Fase 6 — app React Native (Expo)** che consuma queste API. È il
   primo punto in cui l'app sarà mostrabile sul telefono (vedi feedback utente:
-  niente UI browser di test). Prima dell'app si può fare Fase 4 (verifica
-  email/reset password/GDPR) e Fase 5 (hosting), ma per "vederla sul telefono"
-  conviene andare diretti sull'app RN puntandola al backend locale.
+  niente UI browser di test).
