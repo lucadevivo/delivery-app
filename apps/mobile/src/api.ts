@@ -58,6 +58,28 @@ async function request<T>(
   return (await res.json()) as T
 }
 
+// Traduce in italiano i codici d'errore di Better Auth, così l'utente vede il
+// motivo reale invece di un generico "fallito".
+async function authError(res: Response, fallback: string): Promise<ApiError> {
+  let code = ""
+  let message = ""
+  try {
+    const j = await res.json()
+    code = String(j?.code ?? "")
+    message = String(j?.message ?? "")
+  } catch {}
+  const map: Record<string, string> = {
+    PASSWORD_TOO_SHORT: "La password deve avere almeno 8 caratteri.",
+    PASSWORD_TOO_LONG: "Password troppo lunga.",
+    USER_ALREADY_EXISTS: "Esiste già un account con questa email.",
+    INVALID_EMAIL: "Email non valida.",
+    INVALID_EMAIL_OR_PASSWORD: "Email o password non corretti.",
+    VALIDATION_ERROR:
+      "Controlla i dati: email valida e password di almeno 8 caratteri.",
+  }
+  return new ApiError(res.status, map[code] || message || fallback)
+}
+
 // ---- Auth ----
 export async function signUp(email: string, password: string, name: string) {
   const res = await fetch(`${API_URL}/api/auth/sign-up/email`, {
@@ -65,7 +87,7 @@ export async function signUp(email: string, password: string, name: string) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, password, name }),
   })
-  if (!res.ok) throw new ApiError(res.status, "Registrazione fallita")
+  if (!res.ok) throw await authError(res, "Registrazione fallita")
   const token = res.headers.get("set-auth-token")
   if (token) await setToken(token)
   return res.json()
@@ -77,7 +99,7 @@ export async function signIn(email: string, password: string) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, password }),
   })
-  if (!res.ok) throw new ApiError(res.status, "Credenziali non valide")
+  if (!res.ok) throw await authError(res, "Credenziali non valide")
   const token = res.headers.get("set-auth-token")
   if (token) await setToken(token)
   return res.json()
@@ -133,6 +155,26 @@ export const api = {
     method: "POST",
     body: input,
   }),
+  getContratto: (id: string) =>
+    request<{ contratto: Contratto }>(`/api/v1/contratti/${id}`),
+  updateContratto: (
+    id: string,
+    patch: Partial<{
+      nome: string
+      colore: string
+      tipo: TipoContratto
+      paga: SchemaPaga
+      fiscale: SchemaFiscale
+    }>,
+  ) =>
+    request<{ contratto: Contratto }>(`/api/v1/contratti/${id}`, {
+      method: "PATCH",
+      body: patch,
+    }),
+  deleteContratto: (id: string) =>
+    request<{ ok: true }>(`/api/v1/contratti/${id}`, { method: "DELETE" }),
+  deleteTurno: (id: string) =>
+    request<{ ok: true }>(`/api/v1/turni/${id}`, { method: "DELETE" }),
   listTurni: (mese?: string) =>
     request<{ turni: TurnoRow[] }>(
       `/api/v1/turni${mese ? `?mese=${mese}` : ""}`,

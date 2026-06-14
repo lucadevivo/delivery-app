@@ -12,34 +12,24 @@ import {
 } from "react-native"
 import { BlurView } from "expo-blur"
 import { LinearGradient } from "expo-linear-gradient"
+import { useTheme } from "./theme"
 
-// Palette derivata dalla webapp turni (token oklch convertiti in sRGB):
-// crema caldo + terracotta, stile iOS "liquid glass".
-export const colors = {
-  bg: "#f9f4f0", // sfondo crema
-  card: "#fefbf9", // superficie piena (swatch, tab bar)
-  border: "#dcd6d1",
-  text: "#2a1f1a", // marrone scuro caldo
-  muted: "#7e6e65",
-  accent: "#993a31", // primario terracotta
-  danger: "#c53637",
-  good: "#547e4b", // verde per importi positivi
-  primaryFg: "#fbf8f5",
-}
+// Ri-export per comodità: le schermate importano tutto da "@/ui".
+export { useTheme, colors } from "./theme"
 
-// Sfondo a gradiente caldo: due "glow" radiali (approssimati con gradienti
-// lineari) che scendono dall'alto, come la .app-bg della webapp.
+// Sfondo a gradiente caldo (due "glow" dall'alto), come la .app-bg della webapp.
 function GradientBg() {
+  const { c } = useTheme()
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <LinearGradient
-        colors={["rgba(153,58,49,0.14)", "rgba(153,58,49,0)"]}
+        colors={[c.grad1, "transparent"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.25, y: 1 }}
         style={[styles.glow, { height: 440 }]}
       />
       <LinearGradient
-        colors={["rgba(180,117,72,0.13)", "rgba(180,117,72,0)"]}
+        colors={[c.grad2, "transparent"]}
         start={{ x: 1, y: 0 }}
         end={{ x: 0.55, y: 0.9 }}
         style={[styles.glow, { height: 380 }]}
@@ -49,8 +39,9 @@ function GradientBg() {
 }
 
 export function Screen({ children }: { children: ReactNode }) {
+  const { c } = useTheme()
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: c.bg }]}>
       <GradientBg />
       <View style={styles.screenInner}>{children}</View>
     </View>
@@ -60,24 +51,111 @@ export function Screen({ children }: { children: ReactNode }) {
 export function Card({
   children,
   style,
+  contentStyle,
 }: {
   children: ReactNode
   style?: StyleProp<ViewStyle>
+  contentStyle?: StyleProp<ViewStyle>
 }) {
+  const { c } = useTheme()
   return (
-    <View style={[styles.cardShadow, style]}>
-      <BlurView intensity={30} tint="light" style={styles.cardBlur}>
-        <View style={styles.cardInner}>{children}</View>
+    <View
+      style={[
+        styles.cardShadow,
+        { backgroundColor: c.cardOverlay, shadowColor: c.shadow },
+        style,
+      ]}
+    >
+      <BlurView
+        intensity={30}
+        tint={c.blurTint}
+        style={[styles.cardBlur, { borderColor: c.cardBorder }]}
+      >
+        <View style={[styles.cardInner, { backgroundColor: c.cardOverlay }, contentStyle]}>
+          {children}
+        </View>
       </BlurView>
     </View>
   )
 }
 
+// Card "hero" piena terracotta (come la card "Incassato" della webapp).
+export function HeroCard({
+  children,
+  style,
+}: {
+  children: ReactNode
+  style?: StyleProp<ViewStyle>
+}) {
+  const { c } = useTheme()
+  return (
+    <View
+      style={[
+        styles.hero,
+        { backgroundColor: c.accent, shadowColor: c.accent },
+        style,
+      ]}
+    >
+      {children}
+    </View>
+  )
+}
+
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  fullWidth,
+}: {
+  options: readonly T[]
+  value: T
+  onChange: (v: T) => void
+  fullWidth?: boolean
+}) {
+  const { c } = useTheme()
+  return (
+    <View
+      style={[
+        styles.segment,
+        { backgroundColor: c.segBg, borderColor: c.border },
+        fullWidth && { width: "100%" },
+      ]}
+    >
+      {options.map((opt) => {
+        const active = opt === value
+        return (
+          <Pressable
+            key={opt}
+            onPress={() => onChange(opt)}
+            style={[
+              styles.segmentItem,
+              fullWidth && { flex: 1, alignItems: "center", paddingVertical: 9 },
+              active && { backgroundColor: c.accent },
+            ]}
+          >
+            <Text
+              style={[
+                styles.segmentText,
+                fullWidth && { fontSize: 14 },
+                { color: active ? c.primaryFg : c.muted },
+              ]}
+            >
+              {opt}
+            </Text>
+          </Pressable>
+        )
+      })}
+    </View>
+  )
+}
+
 export function H1({ children }: { children: ReactNode }) {
-  return <Text style={styles.h1}>{children}</Text>
+  const { c } = useTheme()
+  return <Text style={[styles.h1, { color: c.text }]}>{children}</Text>
 }
 export function Muted({ children }: { children: ReactNode }) {
-  return <Text style={styles.muted}>{children}</Text>
+  const { c } = useTheme()
+  return <Text style={[styles.muted, { color: c.muted }]}>{children}</Text>
 }
 
 export function Button({
@@ -91,28 +169,25 @@ export function Button({
   loading?: boolean
   variant?: "primary" | "ghost" | "danger"
 }) {
+  const { c } = useTheme()
   const isGhost = variant === "ghost"
   const bg =
-    variant === "primary"
-      ? colors.accent
-      : variant === "danger"
-        ? colors.danger
-        : "rgba(255,255,255,0.5)"
+    variant === "primary" ? c.accent : variant === "danger" ? c.danger : c.segBg
   return (
     <Pressable
       onPress={onPress}
       disabled={loading}
       style={({ pressed }) => [
         styles.btn,
-        !isGhost && styles.btnShadow,
+        !isGhost && { ...styles.btnShadow, shadowColor: c.accent },
         { backgroundColor: bg, opacity: pressed || loading ? 0.75 : 1 },
-        isGhost && { borderWidth: 1, borderColor: colors.border },
+        isGhost && { borderWidth: 1, borderColor: c.border },
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={isGhost ? colors.accent : colors.primaryFg} />
+        <ActivityIndicator color={isGhost ? c.accent : c.primaryFg} />
       ) : (
-        <Text style={[styles.btnText, isGhost && { color: colors.text }]}>
+        <Text style={[styles.btnText, { color: isGhost ? c.text : c.primaryFg }]}>
           {title}
         </Text>
       )}
@@ -124,12 +199,16 @@ export function Field({
   label,
   ...props
 }: { label: string } & TextInputProps) {
+  const { c } = useTheme()
   return (
     <View style={{ gap: 6 }}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: c.muted }]}>{label}</Text>
       <TextInput
-        placeholderTextColor={colors.muted}
-        style={styles.input}
+        placeholderTextColor={c.muted}
+        style={[
+          styles.input,
+          { backgroundColor: c.inputBg, borderColor: c.border, color: c.text },
+        ]}
         {...props}
       />
     </View>
@@ -137,13 +216,11 @@ export function Field({
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
+  screen: { flex: 1 },
   screenInner: { flex: 1, padding: 16, gap: 14 },
   glow: { position: "absolute", top: 0, left: 0, right: 0 },
   cardShadow: {
     borderRadius: 18,
-    backgroundColor: "rgba(254,251,249,0.55)",
-    shadowColor: "#2a1f1a",
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.16,
     shadowRadius: 24,
@@ -153,29 +230,32 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.6)",
   },
-  cardInner: {
-    padding: 16,
-    gap: 8,
-    backgroundColor: "rgba(254,251,249,0.4)",
+  cardInner: { padding: 16, gap: 8 },
+  hero: {
+    borderRadius: 20,
+    padding: 18,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.32,
+    shadowRadius: 22,
+    elevation: 5,
   },
-  h1: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.5,
-  },
-  muted: { color: colors.muted, fontSize: 14, lineHeight: 20 },
-  label: { color: colors.muted, fontSize: 13, fontWeight: "600" },
-  input: {
-    backgroundColor: "rgba(255,255,255,0.65)",
+  segment: {
+    flexDirection: "row",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 999,
+    padding: 3,
+  },
+  segmentItem: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 },
+  segmentText: { fontSize: 13, fontWeight: "700" },
+  h1: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
+  muted: { fontSize: 14, lineHeight: 20 },
+  label: { fontSize: 13, fontWeight: "600" },
+  input: {
+    borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 13,
-    color: colors.text,
     fontSize: 16,
   },
   btn: {
@@ -186,11 +266,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   btnShadow: {
-    shadowColor: "#993a31",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.28,
     shadowRadius: 16,
     elevation: 3,
   },
-  btnText: { color: colors.primaryFg, fontSize: 16, fontWeight: "700" },
+  btnText: { fontSize: 16, fontWeight: "700" },
 })

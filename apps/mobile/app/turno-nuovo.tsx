@@ -4,7 +4,7 @@ import { useRouter } from "expo-router"
 import { calcolaTurno, type Contratto } from "@rider/core"
 import { api } from "@/api"
 import { euro, oggi } from "@/format"
-import { Button, Card, Field, Muted, Screen, colors } from "@/ui"
+import { Button, Card, Field, Muted, Screen, useTheme } from "@/ui"
 
 function num(s: string): number | undefined {
   const n = Number(s.replace(",", "."))
@@ -12,6 +12,7 @@ function num(s: string): number | undefined {
 }
 
 export default function TurnoNuovo() {
+  const { c } = useTheme()
   const router = useRouter()
   const [contratti, setContratti] = useState<Contratto[]>([])
   const [sel, setSel] = useState<Contratto | null>(null)
@@ -42,6 +43,14 @@ export default function TurnoNuovo() {
     festivo,
   }
 
+  // Campi mostrati in base allo schema di paga del contratto scelto:
+  // compaiono solo gli input che incidono davvero sul calcolo.
+  const paga = sel?.paga
+  const showOre = !!paga?.oraria
+  const showConsegne = !!paga?.aConsegna || (paga?.quest?.length ?? 0) > 0
+  const showKm = !!paga?.aKm
+  const showFestivo = !!paga?.moltiplicatoreFestivo
+
   // Anteprima live con lo stesso motore del backend (senza contesto annuale).
   const anteprima = useMemo(() => {
     if (!sel) return null
@@ -66,51 +75,68 @@ export default function TurnoNuovo() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ gap: 14 }}>
+      <ScrollView contentContainerStyle={{ gap: 14, paddingTop: 8, paddingBottom: 24 }}>
         <Muted>Contratto</Muted>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          {contratti.map((c) => (
-            <Pressable
-              key={c.id}
-              onPress={() => setSel(c)}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: sel?.id === c.id ? colors.accent : colors.border,
-                backgroundColor: sel?.id === c.id ? colors.accent : "transparent",
-              }}
-            >
-              <Text style={{ color: sel?.id === c.id ? "#fff" : colors.text }}>
-                {c.nome}
-              </Text>
-            </Pressable>
-          ))}
+          {contratti.map((ct) => {
+            const active = sel?.id === ct.id
+            return (
+              <Pressable
+                key={ct.id}
+                onPress={() => setSel(ct)}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: active ? c.accent : c.border,
+                  backgroundColor: active ? c.accent : "transparent",
+                }}
+              >
+                <Text style={{ color: active ? c.primaryFg : c.text }}>{ct.nome}</Text>
+              </Pressable>
+            )
+          })}
           {contratti.length === 0 && <Muted>Nessun contratto.</Muted>}
         </View>
 
         <Field label="Data (YYYY-MM-DD)" value={data} onChangeText={setData} />
-        <Field
-          label="Consegne"
-          value={consegne}
-          onChangeText={setConsegne}
-          keyboardType="number-pad"
-        />
-        <Field label="Ore" value={ore} onChangeText={setOre} keyboardType="decimal-pad" />
-        <Field label="Km" value={km} onChangeText={setKm} keyboardType="decimal-pad" />
+        {showConsegne && (
+          <Field
+            label="Consegne"
+            value={consegne}
+            onChangeText={setConsegne}
+            keyboardType="number-pad"
+          />
+        )}
+        {showOre && (
+          <Field label="Ore" value={ore} onChangeText={setOre} keyboardType="decimal-pad" />
+        )}
+        {showKm && (
+          <Field label="Km" value={km} onChangeText={setKm} keyboardType="decimal-pad" />
+        )}
         <Field
           label="Mance (€)"
           value={mance}
           onChangeText={setMance}
           keyboardType="decimal-pad"
         />
-        <View
-          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-        >
-          <Text style={{ color: colors.text }}>Giorno festivo</Text>
-          <Switch value={festivo} onValueChange={setFestivo} />
-        </View>
+        {showFestivo && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={{ color: c.text }}>Giorno festivo</Text>
+            <Switch
+              value={festivo}
+              onValueChange={setFestivo}
+              trackColor={{ true: c.accent }}
+            />
+          </View>
+        )}
 
         {anteprima && (
           <Card>
@@ -129,15 +155,11 @@ export default function TurnoNuovo() {
 }
 
 function Riga({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  const { c } = useTheme()
   return (
     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 }}>
-      <Text style={{ color: colors.muted }}>{label}</Text>
-      <Text
-        style={{
-          color: strong ? colors.good : colors.text,
-          fontWeight: strong ? "800" : "600",
-        }}
-      >
+      <Text style={{ color: c.muted }}>{label}</Text>
+      <Text style={{ color: strong ? c.good : c.text, fontWeight: strong ? "800" : "600" }}>
         {value}
       </Text>
     </View>

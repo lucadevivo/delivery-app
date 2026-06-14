@@ -3,10 +3,11 @@ import { ActivityIndicator, View } from "react-native"
 import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import { AuthProvider, useAuth } from "@/auth"
-import { colors } from "@/ui"
+import { ThemeProvider, useTheme } from "@/theme"
 
 function Gate() {
   const { loading, signedIn } = useAuth()
+  const { c, scheme } = useTheme()
   const segments = useSegments()
   const router = useRouter()
 
@@ -22,43 +23,53 @@ function Gate() {
       <View
         style={{
           flex: 1,
-          backgroundColor: colors.bg,
+          backgroundColor: c.bg,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <ActivityIndicator color={colors.accent} size="large" />
+        <ActivityIndicator color={c.accent} size="large" />
       </View>
     )
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.bg },
-        headerTintColor: colors.text,
-        contentStyle: { backgroundColor: colors.bg },
-      }}
-    >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="sign-in" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="turno-nuovo"
-        options={{ presentation: "modal", title: "Nuovo turno" }}
-      />
-      <Stack.Screen
-        name="contratto-nuovo"
-        options={{ presentation: "modal", title: "Nuovo contratto" }}
-      />
-    </Stack>
+    <>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: c.bg },
+          headerTintColor: c.text,
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: c.bg },
+        }}
+      >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+        <Stack.Screen name="profilo" options={{ title: "Profilo" }} />
+        <Stack.Screen
+          name="turno-nuovo"
+          options={{ presentation: "modal", title: "Nuovo turno" }}
+        />
+        <Stack.Screen
+          name="contratto-nuovo"
+          options={{ presentation: "modal", title: "Nuovo contratto" }}
+        />
+        <Stack.Screen
+          name="contratto-modifica"
+          options={{ presentation: "modal", title: "Modifica contratto" }}
+        />
+      </Stack>
+    </>
   )
 }
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="dark" />
-      <Gate />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Gate />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

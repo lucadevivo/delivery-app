@@ -3,9 +3,10 @@ import { Alert, Pressable, ScrollView, Text, View } from "react-native"
 import { useRouter } from "expo-router"
 import { api } from "@/api"
 import { TEMPLATES, type Template } from "@/templates"
-import { Button, Card, Field, Muted, Screen, colors } from "@/ui"
+import { Button, Card, Field, Muted, Screen, useTheme } from "@/ui"
 
 export default function ContrattoNuovo() {
+  const { c } = useTheme()
   const router = useRouter()
   const [tpl, setTpl] = useState<Template>(TEMPLATES[0]!)
   const [nome, setNome] = useState(TEMPLATES[0]!.nome)
@@ -45,8 +46,8 @@ export default function ContrattoNuovo() {
               <View
                 style={{
                   borderWidth: 1,
-                  borderColor: active ? colors.accent : colors.border,
-                  backgroundColor: colors.card,
+                  borderColor: active ? c.accent : c.border,
+                  backgroundColor: c.card,
                   borderRadius: 14,
                   padding: 14,
                   gap: 4,
@@ -61,7 +62,7 @@ export default function ContrattoNuovo() {
                       backgroundColor: t.colore,
                     }}
                   />
-                  <Text style={{ color: colors.text, fontWeight: "700", fontSize: 16 }}>
+                  <Text style={{ color: c.text, fontWeight: "700", fontSize: 16 }}>
                     {t.nome}
                   </Text>
                 </View>
