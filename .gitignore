@@ -7,3 +7,6 @@ dist/
 coverage/
 .next/
 .expo/
+
+# graphify knowledge-graph output (non parte dell'app)
+graphify-out/
