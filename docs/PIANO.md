@@ -39,9 +39,14 @@ Servono Privacy Policy + ToS + conformità GDPR dal lancio (dati economici).
    (Next standalone), `docker-compose.prod.yml` (api+db+migrate), `/api/health`,
    `scripts/backup.sh`, CI GitHub Actions, `docs/DEPLOY.md`. Resta da eseguire il
    deploy reale sul server quando si vuole andare online.
-6. **App React Native (Expo)** — onboarding/wizard con template piattaforme
-   (Glovo, Deliveroo, Just Eat, Uber Eats, pizzerie a contanti), schermate
-   turni/dashboard/analitica, offline base, push.
+6. **App React Native (Expo)** ✅ FATTO (MVP) — `apps/mobile` (Expo SDK 53, RN
+   0.79, React 19, Expo Router). Auth (bearer token in SecureStore), dashboard
+   del mese, lista turni, nuovo turno con **anteprima live** (motore `@rider/core`
+   condiviso), contratti, nuovo contratto da **template piattaforma**
+   (Glovo/Deliveroo/occasionale/oraria/contanti), profilo con export+cancellazione
+   GDPR. Bundla con Metro (944 moduli, verificato con `expo export`). Monorepo
+   pnpm+Metro risolto con `nodeLinker: hoisted` + `shamefullyHoist`. Manca:
+   offline/sync e push (estensioni successive).
 7. **i18n** — solo IT ora, ma stringhe estratte e struttura multi-valuta pronta.
 8. **Pubblicazione store** — account dev Apple/Google, privacy policy/ToS, asset,
    beta TestFlight + Play Internal.
@@ -56,7 +61,9 @@ Servono Privacy Policy + ToS + conformità GDPR dal lancio (dati economici).
   Isolamento multi-tenant. Verificato end-to-end sulla build di produzione.
 - Produzione: migrazioni versionate, Dockerfile, compose prod, CI, backup, deploy
   doc (`docs/DEPLOY.md`).
+- `apps/mobile` app Expo (SDK 53) completa come MVP, bundla con Metro. README
+  con istruzioni per provarla su telefono via Expo Go.
 - Repo GitHub: `git@github.com:lucadevivo/delivery-app.git` (branch `main`).
-- **Prossimo: Fase 6 — app React Native (Expo)** che consuma queste API. È il
-  primo punto in cui l'app sarà mostrabile sul telefono (vedi feedback utente:
-  niente UI browser di test).
+- **Prossimo: Fase 7 (i18n) / Fase 8 (store)**, oppure rifiniture all'app
+  (modifica/cancellazione turni, analitica, offline, push). Per il deploy reale
+  del backend vedi `docs/DEPLOY.md`.

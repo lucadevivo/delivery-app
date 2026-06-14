@@ -1,6 +1,10 @@
 packages:
   - "packages/*"
   - "apps/*"
+# Metro (Expo/React Native) non gestisce i symlink isolati di pnpm: layout piatto
+# e hoist completo nel node_modules, così Metro risolve le transitive (es. @babel/runtime).
+nodeLinker: hoisted
+shamefullyHoist: true
 allowBuilds:
   esbuild: true
   sharp: true
