@@ -1,0 +1,12 @@
+{
+  "name": "rider-app",
+  "version": "0.0.0",
+  "private": true,
+  "description": "App per rider: registro guadagni multi-contratto, multi-piattaforma, con calcolo fiscale italiano. Monorepo.",
+  "scripts": {
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "packageManager": "pnpm@11.5.3"
+}
