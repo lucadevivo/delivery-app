@@ -18,9 +18,11 @@ Servono Privacy Policy + ToS + conformità GDPR dal lancio (dati economici).
 
 1. **Monorepo + `@rider/core`** ✅ FATTO — modello di dominio + motore di calcolo
    fiscale con test per ogni regime italiano. Riusato da backend e app RN.
-2. **Modello dati generalizzato** ✅ (lato core) — schema paga componibile +
-   schemi fiscali (contanti, ritenuta, forfettario, ordinario, subordinato).
-   TODO: schema Drizzle persistente + script di migrazione dai dati attuali.
+2. **Modello dati generalizzato** ✅ FATTO — `@rider/core` (schema paga
+   componibile + schemi fiscali) e `@rider/db` (Drizzle: contratti con
+   paga/fiscale jsonb tipizzati, turni con snapshot del calcolo, user con
+   tier/trialEndsAt per il paywall futuro). NB: nessuna migrazione dei dati
+   reali (scelta dell'utente).
 3. **Backend API** — convertire le server actions della webapp in `/api/v1`
    autenticate via token (l'app RN non può chiamare server actions).
 4. **Multi-tenancy** — signup pubblico (rimuovere blocco middleware), verifica
@@ -37,6 +39,8 @@ Servono Privacy Policy + ToS + conformità GDPR dal lancio (dati economici).
 
 ## Stato attuale del codice
 
-- `packages/core` completo e testato (13 test verdi).
-- Prossimo passo suggerito: **Fase 2 persistenza** (schema Drizzle + migrazione)
-  oppure **Fase 3 backend API**.
+- `packages/core` completo e testato (12 test verdi).
+- `packages/db` schema Drizzle sul modello generalizzato (typecheck ok).
+- Repo GitHub: `git@github.com:lucadevivo/delivery-app.git` (branch `main`).
+- Prossimo passo suggerito: **Fase 3 backend API** (`/api/v1` autenticate via
+  token, da consumare con l'app React Native).
