@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # La versione di pnpm è letta dal campo "packageManager" del package.json:
+      # specificarla anche qui causerebbe un conflitto "Multiple versions of pnpm".
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11
       - uses: actions/setup-node@v4
         with:
           node-version: 22
