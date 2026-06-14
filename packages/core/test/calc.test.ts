@@ -94,21 +94,9 @@ describe("regime contanti / a nero — nessuna trattenuta", () => {
   })
 })
 
-describe("migrazione casi reali della prima app", () => {
-  it("Desy Pizza (contanti): fisso 25 + 1€/consegna", () => {
+describe("regime prestazione occasionale — ritenuta d'acconto 20%", () => {
+  it("fisso + consegne, sotto i 5.000 € annui: solo ritenuta, niente contributi", () => {
     const c = contratto({
-      nome: "Desy Pizza",
-      paga: { aTurno: 25, aConsegna: 1 },
-    })
-    const r = calcolaTurno(c, { data: LUNEDI, consegne: 12, mance: 5 })
-    expect(r.netto).toBe(37)
-    expect(r.totale).toBe(42)
-  })
-
-  it("AppetEat (ritenuta 20%): fisso 25 + 2€/consegna", () => {
-    // Sotto i 5.000 € annui: nessun contributo, solo ritenuta 20% sul lordo.
-    const c = contratto({
-      nome: "AppetEat",
       tipo: "prestazione_occasionale",
       fiscale: prestazioneOccasionale(),
       paga: { aTurno: 25, aConsegna: 2 },
